@@ -6,7 +6,7 @@ A machine learning project that classifies URLs as **Phishing** or **Legitimate*
 
 ## Problem Statement
 
-Phishing remains one of the most common initial attack vectors in cybersecurity incidents. Many phishing detection systems rely on blacklists, which fail against newly registered or slightly modified URLs. This project explores whether a URL's *structure alone* — without visiting the site — carries enough signal to flag it as suspicious.
+Phishing remains one of the most common initial attack vectors in cybersecurity incidents. Many phishing detection systems rely on blacklists, which fail against newly registered or slightly modified URLs. This project explores whether a URL's _structure alone_ — without visiting the site — carries enough signal to flag it as suspicious.
 
 ## Motivation
 
@@ -14,7 +14,7 @@ As a Penetration Testing-focused student, I wanted a portfolio project that demo
 
 ## Objective
 
-Build and evaluate a binary classifier (Phishing vs. Legitimate) using only features extractable from the URL string itself, with an emphasis on understanding *why* each feature works (or doesn't) rather than chasing the highest possible accuracy score.
+Build and evaluate a binary classifier (Phishing vs. Legitimate) using only features extractable from the URL string itself, with an emphasis on understanding _why_ each feature works (or doesn't) rather than chasing the highest possible accuracy score.
 
 ## Dataset
 
@@ -26,11 +26,11 @@ Build and evaluate a binary classifier (Phishing vs. Legitimate) using only feat
 
 The raw dataset required explicit cleaning before use:
 
-| Issue | Rows Affected | Action Taken |
-|---|---|---|
-| Full-row duplicates | 42,150 | Dropped |
-| Conflicting labels (same URL, different label) | 1 URL (2 rows) | Dropped — label could not be trusted |
-| Corrupted/invalid URL strings (e.g. `?`, garbled unicode) | 114 | Dropped via validation rule (min length 7, must contain `.`, must contain ≥3 alphanumeric chars) |
+| Issue                                                     | Rows Affected  | Action Taken                                                                                     |
+| --------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------ |
+| Full-row duplicates                                       | 42,150         | Dropped                                                                                          |
+| Conflicting labels (same URL, different label)            | 1 URL (2 rows) | Dropped — label could not be trusted                                                             |
+| Corrupted/invalid URL strings (e.g. `?`, garbled unicode) | 114            | Dropped via validation rule (min length 7, must contain `.`, must contain ≥3 alphanumeric chars) |
 
 **Final clean dataset:** 507,080 rows — 392,831 legitimate (77.5%), 114,249 phishing (22.5%)
 
@@ -47,18 +47,19 @@ The raw dataset required explicit cleaning before use:
 
 Eight features were extracted from each URL, each validated against the data before inclusion (not assumed from theory alone):
 
-| Feature | Description | Validated Signal |
-|---|---|---|
-| `url_length` | Total character length | Right-skewed for phishing; strong in the tail, weak in the mid-range |
-| `dot_count` | Number of `.` characters | Median identical between classes; distinguishing power mostly in outliers |
-| `digit_count` | Number of digits | **Strongest individual signal** — clear gap even outside outliers |
-| `hyphen_count` | Number of `-` characters | Counter-intuitive: *higher* in legitimate URLs due to SEO-friendly article slugs (e.g. news sites), not phishing brand-spoofing as originally hypothesized |
-| `special_char_count` | Non-alphanumeric characters (excluding `.` and `/`) | Weak individually; useful in combination |
-| `has_at_symbol` | Presence of `@` | Rare overall, but ~24x more common in phishing when present |
-| `subdomain_count` | Estimated subdomain depth (hostname-based, not just dot-counting) | Correlates with `dot_count` (r≈0.73); kept as it measures a more precise concept |
-| `has_ip_address` | Whether the hostname is a raw IPv4 address | Strong signal: 3.19% of phishing URLs vs. 0.006% of legitimate URLs |
+| Feature              | Description                                                       | Validated Signal                                                                                                                                           |
+| -------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `url_length`         | Total character length                                            | Right-skewed for phishing; strong in the tail, weak in the mid-range                                                                                       |
+| `dot_count`          | Number of `.` characters                                          | Median identical between classes; distinguishing power mostly in outliers                                                                                  |
+| `digit_count`        | Number of digits                                                  | **Strongest individual signal** — clear gap even outside outliers                                                                                          |
+| `hyphen_count`       | Number of `-` characters                                          | Counter-intuitive: _higher_ in legitimate URLs due to SEO-friendly article slugs (e.g. news sites), not phishing brand-spoofing as originally hypothesized |
+| `special_char_count` | Non-alphanumeric characters (excluding `.` and `/`)               | Weak individually; useful in combination                                                                                                                   |
+| `has_at_symbol`      | Presence of `@`                                                   | Rare overall, but ~24x more common in phishing when present                                                                                                |
+| `subdomain_count`    | Estimated subdomain depth (hostname-based, not just dot-counting) | Correlates with `dot_count` (r≈0.73); kept as it measures a more precise concept                                                                           |
+| `has_ip_address`     | Whether the hostname is a raw IPv4 address                        | Strong signal: 3.19% of phishing URLs vs. 0.006% of legitimate URLs                                                                                        |
 
 **Deliberately excluded:**
+
 - **HTTPS usage** — 99.98% of URLs in this dataset lack scheme information (`http://`/`https://`) entirely, making this feature unusable here.
 - **URL shortener detection** — tested and found to have an inverted, misleading signal (6.35% of legitimate URLs vs. 4.95% of phishing URLs used shorteners), likely because legitimate marketing/social content commonly uses shorteners while phishing in this dataset does not.
 
@@ -76,11 +77,11 @@ All models used a stratified 80/20 train/test split to preserve class balance ac
 
 Accuracy alone is misleading on this imbalanced dataset (a model that always predicts "legitimate" would already score ~77.5%). Evaluation therefore prioritized **recall on the phishing class**, since a missed phishing URL (false negative) is more dangerous than a false alarm.
 
-| Model | Accuracy | Precision (phishing) | Recall (phishing) | F1 (phishing) | ROC-AUC |
-|---|---|---|---|---|---|
-| Logistic Regression (balanced) | 0.717 | 0.415 | 0.627 | 0.500 | 0.755 |
-| Decision Tree | 0.803 | 0.547 | 0.726 | 0.624 | 0.865 |
-| **Random Forest** | **0.824** | **0.586** | **0.747** | **0.657** | **0.892** |
+| Model                          | Accuracy  | Precision (phishing) | Recall (phishing) | F1 (phishing) | ROC-AUC   |
+| ------------------------------ | --------- | -------------------- | ----------------- | ------------- | --------- |
+| Logistic Regression (balanced) | 0.717     | 0.415                | 0.627             | 0.500         | 0.755     |
+| Decision Tree                  | 0.803     | 0.547                | 0.726             | 0.624         | 0.865     |
+| **Random Forest**              | **0.824** | **0.586**            | **0.747**         | **0.657**     | **0.892** |
 
 **Random Forest was selected as the final model** — it outperformed the other two on every metric simultaneously (no trade-off had to be accepted).
 
@@ -103,7 +104,7 @@ The final Random Forest model achieves **ROC-AUC 0.892**, correctly identifying 
 
 ## Limitations
 
-- **Lexical-only approach.** The model has no access to DNS records, WHOIS registration data, page content, JavaScript behavior, or threat intelligence feeds — all of which are commonly used in production-grade phishing detection systems. This model captures *one signal among many*.
+- **Lexical-only approach.** The model has no access to DNS records, WHOIS registration data, page content, JavaScript behavior, or threat intelligence feeds — all of which are commonly used in production-grade phishing detection systems. This model captures _one signal among many_.
 - **Recall ceiling (~75%).** Roughly 1 in 4 phishing URLs in the test set are missed. This is a meaningful gap for a real-world security tool and should not be understated.
 - **No HTTPS signal.** The dataset does not reliably include URL scheme information, so a genuinely useful feature (HTTPS vs. HTTP) could not be tested.
 - **Dataset recency.** The source dataset reflects phishing patterns as collected at the time of scraping; it may not capture more recent obfuscation techniques.
@@ -121,7 +122,7 @@ The final Random Forest model achieves **ROC-AUC 0.892**, correctly identifying 
 
 ```bash
 # 1. Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/ilham0A/ai-phishing-url-detection
 cd ai-phishing-url-detection
 
 # 2. Install dependencies
