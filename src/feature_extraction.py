@@ -7,53 +7,68 @@ COMMON_TWO_PART_TLDS = {
     "co.za", "com.mx", "co.in", "org.uk", "net.au", "gov.uk",
 }
 
+
 def _get_hostname(url: str) -> str:
     if not isinstance(url, str) or url == "":
         return ""
     candidate = url if re.match(r"^https?://", url, re.IGNORECASE) else f"http://{url}"
     try:
         netloc = urlparse(candidate).netloc
-        return netloc.split(":")[0]
+        return netloc.split(":")[0]  # buang port jika ada, mis. ":8080"
     except ValueError:
         return ""
+
 
 def url_length(url: str) -> int:
     return len(url) if isinstance(url, str) else 0
 
+
 def dot_count(url: str) -> int:
     return url.count(".") if isinstance(url, str) else 0
+
 
 def digit_count(url: str) -> int:
     return sum(c.isdigit() for c in url) if isinstance(url, str) else 0
 
+
 def hyphen_count(url: str) -> int:
     return url.count("-") if isinstance(url, str) else 0
+
 
 def special_char_count(url: str) -> int:
     if not isinstance(url, str):
         return 0
     return len(re.findall(r"[^a-zA-Z0-9./]", url))
 
+
 def has_at_symbol(url: str) -> int:
     return int("@" in url) if isinstance(url, str) else 0
+
 
 def subdomain_count(url: str) -> int:
     hostname = _get_hostname(url)
     if not hostname:
         return 0
+
     parts = hostname.split(".")
     two_part = ".".join(parts[-2:]) if len(parts) >= 2 else ""
+
     if two_part in COMMON_TWO_PART_TLDS and len(parts) >= 3:
-        core_parts = parts[:-2]
+        core_parts = parts[:-2]  # buang 2 bagian TLD
     else:
-        core_parts = parts[:-1] if len(parts) >= 2 else parts
+        core_parts = parts[:-1] if len(parts) >= 2 else parts  # buang 1 bagian TLD
+
+    # core_parts sekarang berisi [subdomain..., domain_utama]
+    # jumlah subdomain = jumlah elemen dikurangi 1 (domain utama)
     return max(0, len(core_parts) - 1)
+
 
 def has_ip_address(url: str) -> int:
     hostname = _get_hostname(url)
     if not re.fullmatch(r"(\d{1,3}\.){3}\d{1,3}", hostname):
         return 0
     return int(all(0 <= int(octet) <= 255 for octet in hostname.split(".")))
+
 
 def extract_features(df: pd.DataFrame, url_col: str = "URL") -> pd.DataFrame:
     result = pd.DataFrame(index=df.index)
